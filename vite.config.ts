@@ -7,6 +7,14 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 export default defineConfig({
+  // Supabase's SSR bundle imports tslib at runtime. Keep it inside the
+  // server output so Vercel does not try to resolve it from a missing
+  // external package in the generated function.
+  vite: {
+    ssr: {
+      noExternal: ['tslib'],
+    },
+  },
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
