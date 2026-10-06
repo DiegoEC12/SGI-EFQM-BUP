@@ -18,7 +18,6 @@ import {
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 
-import logo from "@/assets/logo-bup.png.asset.json";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
@@ -91,7 +90,7 @@ export function AppShell({
         <div className="flex items-center justify-between gap-3 px-5 py-5">
           <div className="flex items-center gap-3">
             <img
-              src={logo.url}
+              src="/favicon.png"
               alt="Escudo Colegio El Buen Pastor"
               className="size-10 rounded-full bg-white/95 p-0.5"
             />
