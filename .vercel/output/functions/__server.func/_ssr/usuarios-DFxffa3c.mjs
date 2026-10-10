@@ -8,9 +8,9 @@ import { n as Card, r as CardContent, t as AppShell } from "./card-tBwzq2Kc.mjs"
 import { t as Badge } from "./badge-Cc0IblCb.mjs";
 import { t as Input } from "./input-DicJzR9-.mjs";
 import { a as DialogHeader, i as DialogFooter, n as DialogContent, o as DialogTitle, r as DialogDescription, t as Dialog } from "./dialog-BBUarmca.mjs";
-import { a as TableHeader, i as TableHead, n as TableBody, o as TableRow, r as TableCell, t as Table } from "./table-BQuBX6bn.mjs";
 import { t as toast } from "../_libs/sonner.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/usuarios-QRDsqQA3.js
+import { a as TableHeader, i as TableHead, n as TableBody, o as TableRow, r as TableCell, t as Table } from "./table-BQuBX6bn.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/usuarios-DFxffa3c.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var vacio = {
@@ -49,9 +49,15 @@ function Usuarios() {
 	}
 	async function guardar(e) {
 		e.preventDefault();
-		if (!form.nombre.trim() || !form.correo.trim()) return toast.error("Nombre y correo son obligatorios.");
+		if (!form.nombre.trim() || !form.correo.trim()) {
+			toast.error("Nombre y correo son obligatorios.");
+			return;
+		}
 		const result = editando ? await supabase.from("usuarios_sgi").update(form).eq("id", editando.id) : await supabase.from("usuarios_sgi").insert(form);
-		if (result.error) return toast.error(`No se pudo guardar: ${result.error.message}`);
+		if (result.error) {
+			toast.error(`No se pudo guardar: ${result.error.message}`);
+			return;
+		}
 		toast.success(editando ? "Usuario actualizado." : "Usuario creado.");
 		setAbierto(false);
 		await cargar();

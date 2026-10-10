@@ -1,60 +1,33 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { FileText } from "lucide-react";
-
+import { useEffect, useState } from "react";
+import { Eye, FileText, Pencil, Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { AppShell } from "@/components/sgi/app-shell";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { evidencias, indicadores, procesos, registros, subprocesos } from "@/lib/sgi/data";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 
-export const Route = createFileRoute("/_authenticated/evidencias")({
-  head: () => ({
-    meta: [
-      { title: "Evidencias · SGI EFQM" },
-      { name: "description", content: "Repositorio de evidencias que respaldan los registros de indicadores EFQM." },
-      { property: "og:title", content: "Evidencias · SGI EFQM" },
-      { property: "og:description", content: "Actas, formatos y respaldos vinculados a cada medición." },
-    ],
-  }),
-  component: Evidencias,
-});
+type Evidencia = Database["public"]["Tables"]["evidencias"]["Row"];
+type Registro = Database["public"]["Tables"]["registros"]["Row"];
+type Indicador = Database["public"]["Tables"]["indicadores"]["Row"];
+type Formulario = { registro_id: string; nombre: string; tipo: string; archivo: File | null };
+const BUCKET = "sgi-evidencias";
+const vacio: Formulario = { registro_id: "", nombre: "", tipo: "PDF", archivo: null };
+
+export const Route = createFileRoute("/_authenticated/evidencias")({ head: () => ({ meta: [{ title: "Evidencias · SGI EFQM" }] }), component: Evidencias });
 
 function Evidencias() {
-  const filas = evidencias.map((e) => {
-    const reg = registros.find((r) => r.id === e.registroId)!;
-    const ind = indicadores.find((i) => i.id === reg.indicadorId)!;
-    const sub = subprocesos.find((s) => s.id === ind.subprocesoId)!;
-    const proc = procesos.find((p) => p.id === sub.procesoId)!;
-    return { e, reg, ind, sub, proc };
-  });
-
-  return (
-    <AppShell titulo="Evidencias" descripcion="Respaldos documentales de las mediciones">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {filas.map(({ e, reg, ind, proc }) => (
-          <Card key={e.id} className="shadow-card">
-            <CardContent className="space-y-2 p-4">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="grid size-9 place-items-center rounded-md bg-primary/10 text-primary">
-                    <FileText className="size-4" />
-                  </span>
-                  <p className="text-sm font-medium">{e.nombre}</p>
-                </div>
-                <Badge variant="secondary">{e.tipo}</Badge>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {ind.codigo} · {ind.nombre}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {proc.nombre} — {reg.periodo} {reg.anio}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Subido por {e.subidoPor} el {e.fecha}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </AppShell>
-  );
+  const [items, setItems] = useState<Evidencia[]>([]); const [registros, setRegistros] = useState<Registro[]>([]); const [indicadores, setIndicadores] = useState<Indicador[]>([]); const [admin, setAdmin] = useState(false); const [form, setForm] = useState<Formulario>(vacio); const [editando, setEditando] = useState<Evidencia | null>(null); const [abierto, setAbierto] = useState(false); const [cargando, setCargando] = useState(true);
+  async function cargar() { setCargando(true); const [e, r, i, u] = await Promise.all([supabase.from("evidencias").select("id,registro_id,nombre,tipo,subido_por,fecha,archivo_path,archivo_mime,archivo_tamano").order("fecha", { ascending: false }), supabase.from("registros").select("*").order("anio", { ascending: false }), supabase.from("indicadores").select("*").order("codigo"), supabase.auth.getUser()]); if (e.error || r.error || i.error) toast.error(`No se pudieron cargar las evidencias: ${e.error?.message ?? r.error?.message ?? i.error?.message}`); else { setItems((e.data ?? []) as Evidencia[]); setRegistros(r.data ?? []); setIndicadores(i.data ?? []); } if (u.data.user) { const role = await supabase.from("user_roles").select("role").eq("user_id", u.data.user.id).maybeSingle(); setAdmin(role.data?.role === "admin"); } setCargando(false); }
+  useEffect(() => { void cargar(); }, []);
+  function abrir(item?: Evidencia) { setEditando(item ?? null); setForm(item ? { registro_id: item.registro_id, nombre: item.nombre, tipo: item.tipo, archivo: null } : { ...vacio, registro_id: registros[0]?.id ?? "" }); setAbierto(true); }
+  async function guardar(e: React.FormEvent) { e.preventDefault(); if (!form.registro_id || !form.nombre.trim()) { toast.error("Registro y nombre son obligatorios."); return; } if (!editando && !form.archivo) { toast.error("Selecciona el documento de la evidencia."); return; } let path = editando?.archivo_path ?? null; if (form.archivo) { path = `${form.registro_id}/${crypto.randomUUID()}-${form.archivo.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`; const upload = await supabase.storage.from(BUCKET).upload(path, form.archivo, { upsert: false, contentType: form.archivo.type }); if (upload.error) { toast.error(`No se pudo subir el documento: ${upload.error.message}`); return; } } const values = { registro_id: form.registro_id, nombre: form.nombre, tipo: form.tipo, archivo_path: path, archivo_mime: form.archivo?.type ?? editando?.archivo_mime ?? null, archivo_tamano: form.archivo?.size ?? editando?.archivo_tamano ?? null }; const result = editando ? await supabase.from("evidencias").update(values).eq("id", editando.id) : await supabase.from("evidencias").insert({ ...values, subido_por: (await supabase.auth.getUser()).data.user?.email ?? "" }); if (result.error) { toast.error(`No se pudo guardar: ${result.error.message}`); return; } toast.success(editando ? "Evidencia actualizada." : "Evidencia creada."); setAbierto(false); await cargar(); }
+  async function eliminar(item: Evidencia) { if (!window.confirm(`¿Eliminar ${item.nombre}?`)) return; const { error } = await supabase.from("evidencias").delete().eq("id", item.id); if (error) toast.error(`No se pudo eliminar: ${error.message}`); else { if (item.archivo_path) await supabase.storage.from(BUCKET).remove([item.archivo_path]); toast.success("Evidencia eliminada."); await cargar(); } }
+  async function ver(item: Evidencia) { if (!item.archivo_path) { toast.info("Esta evidencia histórica aún no tiene un documento adjunto."); return; } const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(item.archivo_path, 300, { download: false }); if (error) toast.error(`No se pudo abrir el documento: ${error.message}`); else window.open(data.signedUrl, "_blank", "noopener,noreferrer"); }
+  return <AppShell titulo="Evidencias" descripcion="Respaldos documentales de las mediciones"><div className="flex justify-end"><Button onClick={() => abrir()} disabled={!admin}><Plus /> Nueva evidencia</Button></div><div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{cargando ? <p className="text-sm text-muted-foreground">Cargando evidencias…</p> : items.map((e) => { const reg = registros.find((r) => r.id === e.registro_id); const ind = indicadores.find((i) => i.id === reg?.indicador_id); return <Card key={e.id} className="shadow-card"><CardContent className="space-y-2 p-4"><div className="flex items-start justify-between gap-2"><div className="flex items-center gap-2"><span className="grid size-9 place-items-center rounded-md bg-primary/10 text-primary"><FileText className="size-4" /></span><p className="text-sm font-medium">{e.nombre}</p></div><Badge variant="secondary">{e.tipo}</Badge></div><p className="text-xs text-muted-foreground">{ind?.codigo ?? "—"} · {ind?.nombre ?? "Registro"}</p><p className="text-xs text-muted-foreground">{reg?.periodo ?? ""} {reg?.anio ?? ""} · Subido por {e.subido_por || "—"}</p><div className="flex justify-end gap-1"><Button size="sm" variant="outline" onClick={() => void ver(e)}><Eye /> Ver documento</Button>{admin && <><Button size="icon" variant="ghost" aria-label="Editar" onClick={() => abrir(e)}><Pencil /></Button><Button size="icon" variant="ghost" aria-label="Eliminar" onClick={() => void eliminar(e)}><Trash2 /></Button></>}</div></CardContent></Card>; })}</div><Dialog open={abierto} onOpenChange={setAbierto}><DialogContent><form onSubmit={guardar}><DialogHeader><DialogTitle>{editando ? "Editar evidencia" : "Nueva evidencia"}</DialogTitle><DialogDescription>El documento se almacenará en el bucket privado {BUCKET}.</DialogDescription></DialogHeader><div className="grid gap-3 py-4"><label className="text-sm">Registro asociado<Select value={form.registro_id} onValueChange={(v) => setForm({ ...form, registro_id: v })}><SelectTrigger><SelectValue placeholder="Selecciona un registro" /></SelectTrigger><SelectContent>{registros.map((r) => <SelectItem key={r.id} value={r.id}>{r.anio} · {r.periodo} · {indicadores.find((i) => i.id === r.indicador_id)?.codigo ?? r.indicador_id}</SelectItem>)}</SelectContent></Select></label><label className="text-sm">Nombre<Input value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} /></label><label className="text-sm">Tipo<Input value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value })} /></label><label className="text-sm">Documento {editando && <span className="text-muted-foreground">(opcional para conservar el actual)</span>}<Input type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" onChange={(e) => setForm({ ...form, archivo: e.target.files?.[0] ?? null })} /></label></div><DialogFooter><Button type="button" variant="outline" onClick={() => setAbierto(false)}>Cancelar</Button><Button type="submit">Guardar</Button></DialogFooter></form></DialogContent></Dialog></AppShell>;
 }

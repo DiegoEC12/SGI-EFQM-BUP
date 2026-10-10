@@ -5,7 +5,7 @@ import { o as require_jsx_runtime } from "../_libs/@radix-ui/react-collection+[.
 import { t as supabase } from "./client-BqOWI5fA.mjs";
 import { t as QueryClientProvider } from "../_libs/tanstack__react-query.mjs";
 import { t as QueryClient } from "../_libs/tanstack__query-core.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/router-DXrf94Gr.js
+//#region node_modules/.nitro/vite/services/ssr/assets/router-CHlLcUS4.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var styles_default = "/assets/styles-CY2X34G_.css";
@@ -262,26 +262,12 @@ var Route$8 = createFileRoute("/_authenticated/estructura")({
 	] }),
 	component: lazyRouteComponent($$splitComponentImporter$8, "component")
 });
-var $$splitComponentImporter$7 = () => import("./evidencias-MjYUyoMp.mjs");
+var $$splitComponentImporter$7 = () => import("./evidencias-DKhiVF7L.mjs");
 var Route$7 = createFileRoute("/_authenticated/evidencias")({
-	head: () => ({ meta: [
-		{ title: "Evidencias · SGI EFQM" },
-		{
-			name: "description",
-			content: "Repositorio de evidencias que respaldan los registros de indicadores EFQM."
-		},
-		{
-			property: "og:title",
-			content: "Evidencias · SGI EFQM"
-		},
-		{
-			property: "og:description",
-			content: "Actas, formatos y respaldos vinculados a cada medición."
-		}
-	] }),
+	head: () => ({ meta: [{ title: "Evidencias · SGI EFQM" }] }),
 	component: lazyRouteComponent($$splitComponentImporter$7, "component")
 });
-var $$splitComponentImporter$6 = () => import("./indicadores-D6rWcFLX.mjs");
+var $$splitComponentImporter$6 = () => import("./indicadores-DqPi1hdm.mjs");
 var Route$6 = createFileRoute("/_authenticated/indicadores")({
 	head: () => ({ meta: [{ title: "Indicadores · SGI EFQM" }] }),
 	component: lazyRouteComponent($$splitComponentImporter$6, "component")
@@ -343,7 +329,7 @@ var Route$3 = createFileRoute("/_authenticated/registros")({
 	] }),
 	component: lazyRouteComponent($$splitComponentImporter$3, "component")
 });
-var $$splitComponentImporter$2 = () => import("./usuarios-QRDsqQA3.mjs");
+var $$splitComponentImporter$2 = () => import("./usuarios-DFxffa3c.mjs");
 var Route$2 = createFileRoute("/_authenticated/usuarios")({
 	head: () => ({ meta: [{ title: "Usuarios y roles · SGI EFQM" }] }),
 	component: lazyRouteComponent($$splitComponentImporter$2, "component")

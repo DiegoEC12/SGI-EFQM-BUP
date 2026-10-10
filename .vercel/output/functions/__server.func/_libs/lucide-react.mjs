@@ -264,6 +264,21 @@ var ClipboardList = createLucideIcon("clipboard-list", [
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var Eye = createLucideIcon("eye", [["path", {
+	d: "M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0",
+	key: "1nclc0"
+}], ["circle", {
+	cx: "12",
+	cy: "12",
+	r: "3",
+	key: "1v7zrd"
+}]]);
+/**
+* @license lucide-react v0.575.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var FileStack = createLucideIcon("file-stack", [
 	["path", {
 		d: "M11 21a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1",
@@ -659,4 +674,4 @@ var X = createLucideIcon("x", [["path", {
 	key: "d8bk6v"
 }]]);
 //#endregion
-export { CircleCheck as C, Check as D, ChevronDown as E, BookOpen as O, CircleQuestionMark as S, ChevronRight as T, Gauge as _, Trash2 as a, ClipboardList as b, Plus as c, Menu as d, Mail as f, Gem as g, Grid3x3 as h, TriangleAlert as i, Activity as k, Pencil as l, History as m, Users as n, Target as o, LogOut as p, User as r, Tag as s, X as t, Network as u, FileText as v, ChevronUp as w, Circle as x, FileStack as y };
+export { Activity as A, CircleQuestionMark as C, ChevronDown as D, ChevronRight as E, Check as O, Circle as S, ChevronUp as T, Gauge as _, Trash2 as a, Eye as b, Plus as c, Menu as d, Mail as f, Gem as g, Grid3x3 as h, TriangleAlert as i, BookOpen as k, Pencil as l, History as m, Users as n, Target as o, LogOut as p, User as r, Tag as s, X as t, Network as u, FileText as v, CircleCheck as w, ClipboardList as x, FileStack as y };

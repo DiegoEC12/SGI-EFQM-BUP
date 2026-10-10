@@ -137,6 +137,9 @@ export type Database = {
       }
       evidencias: {
         Row: {
+          archivo_mime: string | null
+          archivo_path: string | null
+          archivo_tamano: number | null
           fecha: string
           id: string
           nombre: string
@@ -145,6 +148,9 @@ export type Database = {
           tipo: string
         }
         Insert: {
+          archivo_mime?: string | null
+          archivo_path?: string | null
+          archivo_tamano?: number | null
           fecha?: string
           id?: string
           nombre: string
@@ -153,6 +159,9 @@ export type Database = {
           tipo?: string
         }
         Update: {
+          archivo_mime?: string | null
+          archivo_path?: string | null
+          archivo_tamano?: number | null
           fecha?: string
           id?: string
           nombre?: string

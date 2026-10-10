@@ -8,9 +8,9 @@ import { n as Card, r as CardContent, t as AppShell } from "./card-tBwzq2Kc.mjs"
 import { t as Input } from "./input-DicJzR9-.mjs";
 import { a as SelectValue, i as SelectTrigger, n as SelectContent, r as SelectItem, t as Select } from "./select-DUy71i1r.mjs";
 import { a as DialogHeader, i as DialogFooter, n as DialogContent, o as DialogTitle, r as DialogDescription, t as Dialog } from "./dialog-BBUarmca.mjs";
-import { a as TableHeader, i as TableHead, n as TableBody, o as TableRow, r as TableCell, t as Table } from "./table-BQuBX6bn.mjs";
 import { t as toast } from "../_libs/sonner.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/indicadores-D6rWcFLX.js
+import { a as TableHeader, i as TableHead, n as TableBody, o as TableRow, r as TableCell, t as Table } from "./table-BQuBX6bn.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/indicadores-DqPi1hdm.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var vacio = {
@@ -65,9 +65,15 @@ function Indicadores() {
 	}
 	async function guardar(e) {
 		e.preventDefault();
-		if (!form.codigo.trim() || !form.nombre.trim() || !form.subproceso_id) return toast.error("Código, nombre y subproceso son obligatorios.");
+		if (!form.codigo.trim() || !form.nombre.trim() || !form.subproceso_id) {
+			toast.error("Código, nombre y subproceso son obligatorios.");
+			return;
+		}
 		const result = editando ? await supabase.from("indicadores").update(form).eq("id", editando.id) : await supabase.from("indicadores").insert(form);
-		if (result.error) return toast.error(`No se pudo guardar: ${result.error.message}`);
+		if (result.error) {
+			toast.error(`No se pudo guardar: ${result.error.message}`);
+			return;
+		}
 		toast.success(editando ? "Indicador actualizado." : "Indicador creado.");
 		setAbierto(false);
 		await cargar();

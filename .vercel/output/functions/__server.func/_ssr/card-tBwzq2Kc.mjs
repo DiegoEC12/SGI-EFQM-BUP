@@ -4,7 +4,7 @@ import { b as useNavigate, y as Link } from "../_libs/@tanstack/react-router+[..
 import { o as require_jsx_runtime } from "../_libs/@radix-ui/react-collection+[...].mjs";
 import { t as supabase } from "./client-BqOWI5fA.mjs";
 import { n as cn, t as Button } from "./button-DRsC1qZi.mjs";
-import { D as Check, O as BookOpen, T as ChevronRight, _ as Gauge, b as ClipboardList, d as Menu, f as Mail, h as Grid3x3, k as Activity, m as History, n as Users, o as Target, p as LogOut, r as User, s as Tag, t as X, x as Circle, y as FileStack } from "../_libs/lucide-react.mjs";
+import { A as Activity, E as ChevronRight, O as Check, S as Circle, _ as Gauge, d as Menu, f as Mail, h as Grid3x3, k as BookOpen, m as History, n as Users, o as Target, p as LogOut, r as User, s as Tag, t as X, x as ClipboardList, y as FileStack } from "../_libs/lucide-react.mjs";
 import { a as Label2, c as Root2, d as SubTrigger2, f as Trigger, i as ItemIndicator2, l as Separator2, n as Content2, o as Portal2, r as Item2, s as RadioItem2, t as CheckboxItem2, u as SubContent2 } from "../_libs/@radix-ui/react-dropdown-menu+[...].mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/card-tBwzq2Kc.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
