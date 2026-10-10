@@ -1,7 +1,7 @@
 import { y as Link } from "../_libs/@tanstack/react-router+[...].mjs";
 import { o as require_jsx_runtime } from "../_libs/@radix-ui/react-collection+[...].mjs";
 import { t as Button } from "./button-DRsC1qZi.mjs";
-import { f as Grid3x3, m as Gauge, s as Network } from "../_libs/lucide-react.mjs";
+import { _ as Gauge, h as Grid3x3, u as Network } from "../_libs/lucide-react.mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/routes-DxwEnVa8.js
 var import_jsx_runtime = require_jsx_runtime();
 function Index() {

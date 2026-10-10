@@ -1,139 +1,31 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-
+import { useEffect, useState } from "react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { AppShell } from "@/components/sgi/app-shell";
-import { EstadoBadge } from "@/components/sgi/estado-badge";
-import { FiltrosBar } from "@/components/sgi/filtros-bar";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import {
-  aplicarFiltros,
-  evaluarIndicadores,
-  filtrosIniciales,
-  type Filtros,
-  type IndicadorEvaluado,
-} from "@/lib/sgi/metrics";
+import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 
-export const Route = createFileRoute("/_authenticated/indicadores")({
-  head: () => ({
-    meta: [
-      { title: "Indicadores · SGI EFQM" },
-      {
-        name: "description",
-        content: "Fichas técnicas de indicadores EFQM con fórmula, frecuencia, meta, valor alcanzado y estado.",
-      },
-      { property: "og:title", content: "Indicadores · SGI EFQM" },
-      { property: "og:description", content: "Tabla avanzada de indicadores con filtros por área, proceso y estado." },
-    ],
-  }),
-  component: Indicadores,
-});
+type Indicador = Database["public"]["Tables"]["indicadores"]["Row"];
+type Subproceso = Database["public"]["Tables"]["subprocesos"]["Row"];
+type Formulario = Omit<Indicador, "id">;
+const vacio: Formulario = { codigo: "", nombre: "", formula: "", unidad: "%", frecuencia: "Anual", polaridad: "Ascendente", responsable: "", peso: 1, subproceso_id: "" };
+
+export const Route = createFileRoute("/_authenticated/indicadores")({ head: () => ({ meta: [{ title: "Indicadores · SGI EFQM" }] }), component: Indicadores });
 
 function Indicadores() {
-  const [filtros, setFiltros] = useState<Filtros>(filtrosIniciales);
-  const [busqueda, setBusqueda] = useState("");
-  const [sel, setSel] = useState<IndicadorEvaluado | null>(null);
-
-  const lista = useMemo(() => {
-    const base = aplicarFiltros(evaluarIndicadores(filtros.anio), filtros);
-    const q = busqueda.trim().toLowerCase();
-    return q
-      ? base.filter((i) =>
-          `${i.indicador.codigo} ${i.indicador.nombre} ${i.proceso} ${i.subproceso} ${i.area}`
-            .toLowerCase()
-            .includes(q),
-        )
-      : base;
-  }, [filtros, busqueda]);
-
-  return (
-    <AppShell titulo="Indicadores" descripcion="Fichas técnicas y desempeño por periodo">
-      <FiltrosBar valor={filtros} onChange={setFiltros} />
-      <Input
-        placeholder="Buscar por código, nombre, proceso o área…"
-        value={busqueda}
-        onChange={(e) => setBusqueda(e.target.value)}
-        className="max-w-md bg-card"
-      />
-      <Card className="shadow-card">
-        <CardContent className="overflow-x-auto p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Código</TableHead>
-                <TableHead>Indicador</TableHead>
-                <TableHead>Área</TableHead>
-                <TableHead>Frecuencia</TableHead>
-                <TableHead className="text-right">Meta</TableHead>
-                <TableHead className="text-right">Valor</TableHead>
-                <TableHead className="text-right">Cumplimiento</TableHead>
-                <TableHead>Estado</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {lista.map((i) => (
-                <TableRow key={i.indicador.id} className="cursor-pointer" onClick={() => setSel(i)}>
-                  <TableCell className="font-mono text-xs">{i.indicador.codigo}</TableCell>
-                  <TableCell>
-                    <p className="text-sm font-medium">{i.indicador.nombre}</p>
-                    <p className="text-xs text-muted-foreground">{i.subproceso}</p>
-                  </TableCell>
-                  <TableCell className="text-sm">{i.area}</TableCell>
-                  <TableCell className="text-sm">{i.indicador.frecuencia}</TableCell>
-                  <TableCell className="text-right text-sm">{i.meta}%</TableCell>
-                  <TableCell className="text-right text-sm">{i.valor ?? "—"}</TableCell>
-                  <TableCell className="text-right text-sm font-semibold">{i.cumplimiento ?? "—"}%</TableCell>
-                  <TableCell>
-                    <EstadoBadge estado={i.estado} />
-                  </TableCell>
-                </TableRow>
-              ))}
-              {!lista.length && (
-                <TableRow>
-                  <TableCell colSpan={8} className="py-8 text-center text-sm text-muted-foreground">
-                    No se encontraron indicadores con los filtros aplicados.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      <Dialog open={!!sel} onOpenChange={(o) => !o && setSel(null)}>
-        <DialogContent>
-          {sel && (
-            <>
-              <DialogHeader>
-                <DialogTitle className="font-display">{sel.indicador.nombre}</DialogTitle>
-                <DialogDescription>
-                  {sel.indicador.codigo} · {sel.proceso} · {sel.subproceso}
-                </DialogDescription>
-              </DialogHeader>
-              <dl className="grid grid-cols-2 gap-3 text-sm">
-                {[
-                  ["Fórmula", sel.indicador.formula],
-                  ["Unidad", sel.indicador.unidad],
-                  ["Frecuencia", sel.indicador.frecuencia],
-                  ["Polaridad", sel.indicador.polaridad],
-                  ["Responsable", sel.indicador.responsable],
-                  ["Área", sel.area],
-                  ["Meta", `${sel.meta}%`],
-                  ["Valor alcanzado", sel.valor === null ? "Sin registro" : `${sel.valor}%`],
-                ].map(([k, v]) => (
-                  <div key={k as string} className="rounded-md bg-muted p-2">
-                    <dt className="text-[11px] tracking-wide text-muted-foreground uppercase">{k}</dt>
-                    <dd className="mt-0.5">{v}</dd>
-                  </div>
-                ))}
-              </dl>
-              <EstadoBadge estado={sel.estado} className="w-fit" />
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
-    </AppShell>
-  );
+  const [items, setItems] = useState<Indicador[]>([]); const [subprocesos, setSubprocesos] = useState<Subproceso[]>([]); const [form, setForm] = useState<Formulario>(vacio); const [editando, setEditando] = useState<Indicador | null>(null); const [abierto, setAbierto] = useState(false); const [cargando, setCargando] = useState(true); const [busqueda, setBusqueda] = useState("");
+  async function cargar() { setCargando(true); const [i, s] = await Promise.all([supabase.from("indicadores").select("*").order("codigo"), supabase.from("subprocesos").select("*").order("nombre")]); if (i.error || s.error) toast.error(`No se pudieron cargar los datos: ${i.error?.message ?? s.error?.message}`); else { setItems(i.data ?? []); setSubprocesos(s.data ?? []); } setCargando(false); }
+  useEffect(() => { void cargar(); }, []);
+  function abrir(item?: Indicador) { setEditando(item ?? null); setForm(item ? { codigo: item.codigo, nombre: item.nombre, formula: item.formula, unidad: item.unidad, frecuencia: item.frecuencia, polaridad: item.polaridad, responsable: item.responsable, peso: item.peso, subproceso_id: item.subproceso_id } : { ...vacio, subproceso_id: subprocesos[0]?.id ?? "" }); setAbierto(true); }
+  async function guardar(e: React.FormEvent) { e.preventDefault(); if (!form.codigo.trim() || !form.nombre.trim() || !form.subproceso_id) { toast.error("Código, nombre y subproceso son obligatorios."); return; } const result = editando ? await supabase.from("indicadores").update(form).eq("id", editando.id) : await supabase.from("indicadores").insert(form); if (result.error) { toast.error(`No se pudo guardar: ${result.error.message}`); return; } toast.success(editando ? "Indicador actualizado." : "Indicador creado."); setAbierto(false); await cargar(); }
+  async function eliminar(item: Indicador) { if (!window.confirm(`¿Eliminar el indicador ${item.codigo}?`)) return; const { error } = await supabase.from("indicadores").delete().eq("id", item.id); if (error) toast.error(`No se pudo eliminar: ${error.message}`); else { toast.success("Indicador eliminado."); await cargar(); } }
+  const campo = (key: keyof Formulario, value: string | number) => setForm((actual) => ({ ...actual, [key]: value })); const filtrados = items.filter((i) => `${i.codigo} ${i.nombre} ${i.responsable}`.toLowerCase().includes(busqueda.toLowerCase()));
+  return <AppShell titulo="Indicadores" descripcion="Fichas técnicas y desempeño por periodo"><div className="flex flex-wrap justify-between gap-3"><Input placeholder="Buscar por código, nombre o responsable…" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} className="max-w-md bg-card" /><Button onClick={() => abrir()}><Plus /> Nuevo indicador</Button></div><Card className="shadow-card"><CardContent className="overflow-x-auto p-0"><Table><TableHeader><TableRow><TableHead>Código</TableHead><TableHead>Indicador</TableHead><TableHead>Subproceso</TableHead><TableHead>Frecuencia</TableHead><TableHead>Responsable</TableHead><TableHead className="w-28 text-right">Acciones</TableHead></TableRow></TableHeader><TableBody>{cargando ? <TableRow><TableCell colSpan={6} className="py-8 text-center text-muted-foreground">Cargando indicadores…</TableCell></TableRow> : filtrados.map((i) => <TableRow key={i.id}><TableCell className="font-mono text-xs">{i.codigo}</TableCell><TableCell><p className="text-sm font-medium">{i.nombre}</p><p className="text-xs text-muted-foreground">{i.unidad} · {i.polaridad}</p></TableCell><TableCell className="text-sm">{subprocesos.find((s) => s.id === i.subproceso_id)?.nombre ?? "—"}</TableCell><TableCell className="text-sm">{i.frecuencia}</TableCell><TableCell className="text-sm">{i.responsable || "—"}</TableCell><TableCell><div className="flex justify-end gap-1"><Button size="icon" variant="ghost" aria-label="Editar" onClick={() => abrir(i)}><Pencil /></Button><Button size="icon" variant="ghost" aria-label="Eliminar" onClick={() => void eliminar(i)}><Trash2 /></Button></div></TableCell></TableRow>)}{!cargando && !filtrados.length && <TableRow><TableCell colSpan={6} className="py-8 text-center text-muted-foreground">No hay indicadores registrados.</TableCell></TableRow>}</TableBody></Table></CardContent></Card><Dialog open={abierto} onOpenChange={setAbierto}><DialogContent><form onSubmit={guardar}><DialogHeader><DialogTitle>{editando ? "Editar indicador" : "Nuevo indicador"}</DialogTitle><DialogDescription>Los cambios se guardan en Supabase.</DialogDescription></DialogHeader><div className="grid gap-3 py-4"><div className="grid grid-cols-2 gap-3"><label className="text-sm">Código<Input value={form.codigo} onChange={(e) => campo("codigo", e.target.value)} /></label><label className="text-sm">Nombre<Input value={form.nombre} onChange={(e) => campo("nombre", e.target.value)} /></label></div><label className="text-sm">Subproceso<Select value={form.subproceso_id} onValueChange={(v) => campo("subproceso_id", v)}><SelectTrigger><SelectValue placeholder="Selecciona un subproceso" /></SelectTrigger><SelectContent>{subprocesos.map((s) => <SelectItem key={s.id} value={s.id}>{s.nombre}</SelectItem>)}</SelectContent></Select></label><label className="text-sm">Fórmula<Input value={form.formula} onChange={(e) => campo("formula", e.target.value)} /></label><div className="grid grid-cols-2 gap-3"><label className="text-sm">Unidad<Input value={form.unidad} onChange={(e) => campo("unidad", e.target.value)} /></label><label className="text-sm">Frecuencia<Input value={form.frecuencia} onChange={(e) => campo("frecuencia", e.target.value)} /></label><label className="text-sm">Polaridad<Input value={form.polaridad} onChange={(e) => campo("polaridad", e.target.value)} /></label><label className="text-sm">Peso<Input type="number" step="0.01" value={form.peso} onChange={(e) => campo("peso", Number(e.target.value))} /></label></div><label className="text-sm">Responsable<Input value={form.responsable} onChange={(e) => campo("responsable", e.target.value)} /></label></div><DialogFooter><Button type="button" variant="outline" onClick={() => setAbierto(false)}>Cancelar</Button><Button type="submit">Guardar</Button></DialogFooter></form></DialogContent></Dialog></AppShell>;
 }
